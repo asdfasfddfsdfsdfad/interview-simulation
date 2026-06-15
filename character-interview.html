@@ -1,0 +1,1024 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>캐릭터 인터뷰 — Q&A 생성기</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream: #FAF7F2;
+    --ink: #1A1A1A;
+    --red: #C0392B;
+    --gray: #8A8580;
+    --card: #FFFFFF;
+    --line: #E5E0D8;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--cream);
+    color: var(--ink);
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  .masthead {
+    border-bottom: 3px solid var(--ink);
+    padding: 28px 24px 18px;
+    text-align: center;
+    position: relative;
+  }
+
+  .masthead::before, .masthead::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    width: 60px;
+    height: 1px;
+    background: var(--line);
+    display: none;
+  }
+
+  .masthead .eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.25em;
+    color: var(--red);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .masthead h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(28px, 5vw, 44px);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+
+  .masthead p {
+    font-size: 13px;
+    color: var(--gray);
+    margin-top: 6px;
+    font-style: italic;
+  }
+
+  .layout {
+    max-width: 1180px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 340px 1fr;
+    gap: 0;
+    align-items: start;
+  }
+
+  @media (max-width: 880px) {
+    .layout { grid-template-columns: 1fr; }
+  }
+
+  /* ---------- LEFT: PROFILE CARD ---------- */
+  .profile-col {
+    padding: 32px 24px;
+    border-right: 1px solid var(--ink);
+    position: sticky;
+    top: 0;
+  }
+
+  @media (max-width: 880px) {
+    .profile-col { position: static; border-right: none; border-bottom: 1px solid var(--ink); }
+  }
+
+  .section-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--red);
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--line);
+  }
+
+  .field {
+    margin-bottom: 14px;
+  }
+
+  .field label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 5px;
+    color: var(--ink);
+  }
+
+  .field .hint {
+    font-size: 11px;
+    color: var(--gray);
+    font-weight: 400;
+    margin-left: 4px;
+  }
+
+  .field input, .field textarea, .field select {
+    width: 100%;
+    padding: 9px 11px;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    background: var(--card);
+    font-family: 'Inter', sans-serif;
+    font-size: 13.5px;
+    color: var(--ink);
+    transition: border-color 0.15s;
+  }
+
+  .field input:focus, .field textarea:focus, .field select:focus {
+    outline: none;
+    border-color: var(--red);
+  }
+
+  .field textarea {
+    resize: vertical;
+    min-height: 56px;
+    line-height: 1.5;
+  }
+
+  .row-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .api-block {
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px dashed var(--line);
+  }
+
+  .api-block .field input {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+  }
+
+  /* ---------- RIGHT: INTERVIEW AREA ---------- */
+  .interview-col {
+    padding: 32px 24px 80px;
+  }
+
+  .interview-header {
+    margin-bottom: 24px;
+  }
+
+  .interview-header h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 26px;
+    font-weight: 600;
+  }
+
+  .interview-header .sub {
+    font-size: 13px;
+    color: var(--gray);
+    margin-top: 4px;
+  }
+
+  /* Question composer */
+  .composer {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 18px;
+    margin-bottom: 28px;
+  }
+
+  .composer-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  .composer-row input {
+    flex: 1;
+    padding: 11px 13px;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+  }
+
+  .composer-row input:focus {
+    outline: none;
+    border-color: var(--red);
+  }
+
+  .btn {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 11px 18px;
+    border: 1px solid var(--ink);
+    background: var(--ink);
+    color: var(--cream);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+
+  .btn:hover { background: var(--red); border-color: var(--red); }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .btn.outline {
+    background: transparent;
+    color: var(--ink);
+    border-color: var(--line);
+  }
+
+  .btn.outline:hover {
+    background: var(--ink);
+    color: var(--cream);
+    border-color: var(--ink);
+  }
+
+  .btn.small {
+    padding: 7px 12px;
+    font-size: 11px;
+  }
+
+  .suggestions-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .suggestion-chip {
+    font-size: 12.5px;
+    padding: 7px 12px;
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    background: var(--cream);
+    cursor: pointer;
+    transition: all 0.15s;
+    color: var(--ink);
+  }
+
+  .suggestion-chip:hover {
+    border-color: var(--red);
+    color: var(--red);
+  }
+
+  .category-tabs {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+
+  .cat-tab {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    padding: 5px 11px;
+    border-radius: 12px;
+    border: 1px solid var(--line);
+    background: transparent;
+    color: var(--gray);
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .cat-tab.active {
+    background: var(--ink);
+    color: var(--cream);
+    border-color: var(--ink);
+  }
+
+  /* Queue */
+  .queue {
+    margin-bottom: 24px;
+  }
+
+  .queue-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--line);
+    font-size: 14px;
+  }
+
+  .queue-item .num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--red);
+    min-width: 28px;
+  }
+
+  .queue-item .qtext {
+    flex: 1;
+  }
+
+  .queue-item .remove-btn {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--gray);
+    cursor: pointer;
+    border: none;
+    background: none;
+    padding: 4px;
+  }
+
+  .queue-item .remove-btn:hover { color: var(--red); }
+
+  .empty-queue {
+    font-size: 13px;
+    color: var(--gray);
+    font-style: italic;
+    padding: 20px 0;
+    text-align: center;
+  }
+
+  /* Output / article */
+  .article {
+    margin-top: 32px;
+  }
+
+  .article-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+
+  .article-meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--gray);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 22px;
+  }
+
+  .qa-block {
+    margin-bottom: 26px;
+    padding-left: 18px;
+    border-left: 2px solid var(--line);
+  }
+
+  .qa-block.streaming {
+    border-left-color: var(--red);
+  }
+
+  .qa-q {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--red);
+    letter-spacing: 0.05em;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+  }
+
+  .qa-q-text {
+    font-family: 'Playfair Display', serif;
+    font-style: italic;
+    font-size: 17px;
+    color: var(--ink);
+    margin-bottom: 10px;
+    font-weight: 500;
+  }
+
+  .qa-a {
+    font-size: 15px;
+    color: #2b2b2b;
+    white-space: pre-wrap;
+  }
+
+  .actions-bar {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+  }
+
+  .status-msg {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--gray);
+    margin-top: 10px;
+    min-height: 18px;
+  }
+
+  .status-msg.error { color: var(--red); }
+
+  /* Card export view */
+  .export-card {
+    background: var(--card);
+    border: 1px solid var(--ink);
+    padding: 32px;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  .export-card .ec-eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.25em;
+    color: var(--red);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .export-card .ec-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+
+  .export-card .ec-tag {
+    font-size: 13px;
+    color: var(--gray);
+    font-style: italic;
+    margin-bottom: 20px;
+  }
+
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(26,26,26,0.6);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    padding: 20px;
+  }
+
+  .modal-overlay.show {
+    display: flex;
+  }
+
+  .modal-box {
+    background: var(--cream);
+    max-width: 700px;
+    width: 100%;
+    max-height: 85vh;
+    overflow-y: auto;
+    border-radius: 6px;
+    padding: 28px;
+    position: relative;
+  }
+
+  .modal-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    border: none;
+    background: none;
+    font-size: 20px;
+    cursor: pointer;
+    color: var(--gray);
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .modal-close:hover { color: var(--red); }
+
+  .footer-note {
+    text-align: center;
+    padding: 24px;
+    font-size: 11px;
+    color: var(--gray);
+    font-family: 'JetBrains Mono', monospace;
+  }
+</style>
+</head>
+<body>
+
+<div class="masthead">
+  <div class="eyebrow">Special Feature — One-On-One</div>
+  <h1>캐릭터 인터뷰</h1>
+  <p>당신의 자캐와 나누는 가상 인터뷰, 한 페이지로 정리합니다</p>
+</div>
+
+<div class="layout">
+
+  <!-- LEFT: Profile -->
+  <div class="profile-col">
+    <div class="section-label">캐릭터 프로필</div>
+
+    <div class="field">
+      <label>이름 / 호칭</label>
+      <input type="text" id="charName" placeholder="예: 이서연, 카일">
+    </div>
+
+    <div class="row-2">
+      <div class="field">
+        <label>나이</label>
+        <input type="text" id="charAge" placeholder="예: 24세">
+      </div>
+      <div class="field">
+        <label>직업·역할</label>
+        <input type="text" id="charJob" placeholder="예: 용병">
+      </div>
+    </div>
+
+    <div class="field">
+      <label>성격 <span class="hint">핵심 특징 위주로</span></label>
+      <textarea id="charPersonality" placeholder="예: 무뚝뚝하지만 속은 따뜻함. 낯선 사람에겐 경계심이 크고, 칭찬에 약함."></textarea>
+    </div>
+
+    <div class="field">
+      <label>말투 / 화법</label>
+      <textarea id="charSpeech" placeholder="예: 짧고 단정적인 어투. 반말. 가끔 사투리 섞임. 농담은 어색하게 함."></textarea>
+    </div>
+
+    <div class="field">
+      <label>배경 / 세계관 <span class="hint">선택</span></label>
+      <textarea id="charBackground" placeholder="예: 멸망 이후 세계, 폐허 도시에서 자란 생존자. 과거 한 조직에 소속됐었음."></textarea>
+    </div>
+
+    <div class="field">
+      <label>기타 설정 <span class="hint">관계, 습관, 취향 등</span></label>
+      <textarea id="charExtra" placeholder="예: 고양이를 키움. 단 음식을 좋아하지만 인정 안 함. 라이벌 관계인 인물이 있음."></textarea>
+    </div>
+
+    <div class="api-block">
+      <div class="section-label">OpenRouter 설정</div>
+      <div class="field">
+        <label>모델 ID</label>
+        <input type="text" id="modelId" value="google/gemini-3.5-flash" placeholder="예: google/gemini-3.5-flash">
+      </div>
+      <div class="field">
+        <label>인터뷰 스타일</label>
+        <select id="interviewStyle">
+          <option value="magazine">잡지 인터뷰체 (정중하고 깊이있는 어조)</option>
+          <option value="casual">캐주얼 토크 (친근한 수다 형식)</option>
+          <option value="radio">라디오 DJ 코너 (가볍고 리듬감 있는 진행)</option>
+          <option value="confession">고백/심야 라디오 (감성적, 내면 깊은 이야기)</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT: Interview -->
+  <div class="interview-col">
+    <div class="interview-header">
+      <h2>질문 큐 구성하기</h2>
+      <div class="sub">질문을 직접 추가하거나, 캐릭터 설정 기반으로 추천받아 보세요</div>
+    </div>
+
+    <div class="composer">
+      <div class="composer-row">
+        <input type="text" id="customQuestion" placeholder="직접 질문 입력 후 Enter 또는 추가">
+        <button class="btn" id="addQuestionBtn">추가</button>
+      </div>
+
+      <div class="category-tabs" id="categoryTabs">
+        <button class="cat-tab active" data-cat="daily">일상</button>
+        <button class="cat-tab" data-cat="personality">성격·취향</button>
+        <button class="cat-tab" data-cat="past">과거·관계</button>
+        <button class="cat-tab" data-cat="hypothetical">만약에</button>
+        <button class="cat-tab" data-cat="ai">AI 추천</button>
+      </div>
+
+      <div class="suggestions-wrap" id="suggestionsWrap"></div>
+    </div>
+
+    <div class="queue" id="queue">
+      <div class="section-label">질문 큐 <span id="queueCount" style="color:var(--gray); font-weight:400; margin-left:4px;"></span></div>
+      <div id="queueList"><div class="empty-queue">아직 추가된 질문이 없습니다. 위에서 질문을 골라보세요.</div></div>
+    </div>
+
+    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+      <button class="btn" id="generateBtn" disabled>인터뷰 생성하기</button>
+      <button class="btn outline" id="clearQueueBtn">큐 비우기</button>
+    </div>
+    <div class="status-msg" id="statusMsg"></div>
+
+    <div class="article" id="article" style="display:none;">
+      <div class="article-title" id="articleTitle">인터뷰</div>
+      <div class="article-meta" id="articleMeta"></div>
+      <div id="qaContainer"></div>
+
+      <div class="actions-bar">
+        <button class="btn outline small" id="exportCardBtn">카드 형식으로 보기</button>
+        <button class="btn outline small" id="copyTextBtn">텍스트 복사</button>
+        <button class="btn small" id="newInterviewBtn">새 인터뷰 시작</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer-note">CHARACTER INTERVIEW · GENERATED VIA OPENROUTER · FOR FAN-CHARACTER USE</div>
+
+<!-- Card export modal -->
+<div class="modal-overlay" id="cardModal">
+  <div class="modal-box">
+    <button class="modal-close" id="closeModal">✕ 닫기</button>
+    <div class="export-card" id="exportCardContent"></div>
+  </div>
+</div>
+
+<script>
+// ⚠️ 이 파일을 다른 사람과 공유하지 마세요. 아래에 본인의 OpenRouter API 키를 입력하세요.
+// 발급: https://openrouter.ai/keys
+const OPENROUTER_API_KEY = "여기에_본인의_OpenRouter_API_키를_입력하세요";
+
+const STYLE_PROMPTS = {
+  magazine: "정중하고 사려 깊은 잡지 인터뷰 어조로, 캐릭터의 내면을 깊이 드러내는 답변을 작성해줘. 문어체와 구어체를 적절히 섞어서 자연스럽게.",
+  casual: "친구와 수다 떠는 듯한 캐주얼하고 친근한 톤으로 답변해줘. 말투 설정을 최대한 살려서 생동감 있게.",
+  radio: "라디오 DJ 코너처럼 가볍고 리듬감 있게, 청취자에게 말하듯 답변해줘. 유쾌하거나 위트있는 표현도 좋아.",
+  confession: "심야 라디오 사연 코너처럼 감성적이고 솔직한 톤으로, 평소엔 잘 안 하는 내면 이야기를 들려주는 듯한 답변을 작성해줘."
+};
+
+const QUESTION_BANK = {
+  daily: [
+    "오늘 하루는 어떻게 보내셨나요?",
+    "아침에 가장 먼저 하는 일은 무엇인가요?",
+    "최근에 가장 많이 한 생각은 무엇인가요?",
+    "쉬는 날엔 보통 뭘 하시나요?",
+    "요즘 가장 신경 쓰이는 일이 있다면?",
+  ],
+  personality: [
+    "스스로의 성격을 한 단어로 표현한다면?",
+    "가장 좋아하는 것과 싫어하는 것은 무엇인가요?",
+    "남들이 잘 모르는 자신만의 습관이 있나요?",
+    "화가 났을 때 보통 어떻게 행동하시나요?",
+    "스트레스를 풀고 싶을 때 하는 일은?",
+  ],
+  past: [
+    "지금의 자신을 만든 결정적인 사건이 있다면?",
+    "가장 소중한 사람은 누구인가요? 이유도 궁금해요.",
+    "후회하는 일이 있다면 말해줄 수 있나요?",
+    "어린 시절은 어땠나요?",
+    "지금 가장 만나고 싶은 사람은 누구인가요?",
+  ],
+  hypothetical: [
+    "만약 하루 동안 다른 사람이 될 수 있다면, 누가 되고 싶나요?",
+    "만약 모든 걱정이 사라진다면 가장 먼저 하고 싶은 일은?",
+    "타임머신이 있다면 과거의 자신에게 무슨 말을 해주고 싶나요?",
+    "원하는 능력을 하나 가질 수 있다면 무엇을 고를 건가요?",
+    "지금 살고 있는 세계가 아닌 다른 세계에서 살게 된다면 어떨 것 같나요?",
+  ]
+};
+
+let questionQueue = [];
+let qIdCounter = 0;
+
+// ---- DOM refs ----
+const customQuestion = document.getElementById('customQuestion');
+const addQuestionBtn = document.getElementById('addQuestionBtn');
+const queueList = document.getElementById('queueList');
+const queueCount = document.getElementById('queueCount');
+const generateBtn = document.getElementById('generateBtn');
+const clearQueueBtn = document.getElementById('clearQueueBtn');
+const statusMsg = document.getElementById('statusMsg');
+const article = document.getElementById('article');
+const articleTitle = document.getElementById('articleTitle');
+const articleMeta = document.getElementById('articleMeta');
+const qaContainer = document.getElementById('qaContainer');
+const suggestionsWrap = document.getElementById('suggestionsWrap');
+const categoryTabs = document.getElementById('categoryTabs');
+
+// ---- Category tabs / suggestions ----
+let currentCat = 'daily';
+
+function renderSuggestions() {
+  suggestionsWrap.innerHTML = '';
+  if (currentCat === 'ai') {
+    const btn = document.createElement('button');
+    btn.className = 'btn small';
+    btn.textContent = '캐릭터 설정 기반 질문 추천받기';
+    btn.id = 'aiSuggestBtn';
+    btn.addEventListener('click', generateAIQuestions);
+    suggestionsWrap.appendChild(btn);
+    const note = document.createElement('span');
+    note.style.fontSize = '12px';
+    note.style.color = 'var(--gray)';
+    note.textContent = 'OpenRouter API를 호출해 캐릭터에 맞는 질문 5개를 추천합니다';
+    suggestionsWrap.appendChild(note);
+    return;
+  }
+  QUESTION_BANK[currentCat].forEach(q => {
+    const chip = document.createElement('div');
+    chip.className = 'suggestion-chip';
+    chip.textContent = q;
+    chip.addEventListener('click', () => addQuestion(q));
+    suggestionsWrap.appendChild(chip);
+  });
+}
+
+categoryTabs.querySelectorAll('.cat-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    categoryTabs.querySelectorAll('.cat-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    currentCat = tab.dataset.cat;
+    renderSuggestions();
+  });
+});
+
+renderSuggestions();
+
+// ---- Queue management ----
+function addQuestion(text) {
+  text = text.trim();
+  if (!text) return;
+  questionQueue.push({ id: qIdCounter++, text });
+  renderQueue();
+}
+
+function removeQuestion(id) {
+  questionQueue = questionQueue.filter(q => q.id !== id);
+  renderQueue();
+}
+
+function renderQueue() {
+  if (questionQueue.length === 0) {
+    queueList.innerHTML = '<div class="empty-queue">아직 추가된 질문이 없습니다. 위에서 질문을 골라보세요.</div>';
+    queueCount.textContent = '';
+    generateBtn.disabled = true;
+    return;
+  }
+  queueCount.textContent = `(${questionQueue.length})`;
+  generateBtn.disabled = false;
+  queueList.innerHTML = '';
+  questionQueue.forEach((q, idx) => {
+    const item = document.createElement('div');
+    item.className = 'queue-item';
+    item.innerHTML = `
+      <span class="num">Q${String(idx + 1).padStart(2, '0')}</span>
+      <span class="qtext">${escapeHtml(q.text)}</span>
+      <button class="remove-btn" data-id="${q.id}">삭제</button>
+    `;
+    item.querySelector('.remove-btn').addEventListener('click', () => removeQuestion(q.id));
+    queueList.appendChild(item);
+  });
+}
+
+addQuestionBtn.addEventListener('click', () => {
+  addQuestion(customQuestion.value);
+  customQuestion.value = '';
+});
+
+customQuestion.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    addQuestion(customQuestion.value);
+    customQuestion.value = '';
+  }
+});
+
+clearQueueBtn.addEventListener('click', () => {
+  questionQueue = [];
+  renderQueue();
+});
+
+// ---- Helpers ----
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function getCharacterProfile() {
+  return {
+    name: document.getElementById('charName').value.trim(),
+    age: document.getElementById('charAge').value.trim(),
+    job: document.getElementById('charJob').value.trim(),
+    personality: document.getElementById('charPersonality').value.trim(),
+    speech: document.getElementById('charSpeech').value.trim(),
+    background: document.getElementById('charBackground').value.trim(),
+    extra: document.getElementById('charExtra').value.trim(),
+  };
+}
+
+function buildSystemPrompt(profile, styleKey) {
+  let lines = [];
+  lines.push(`너는 지금부터 다음 캐릭터가 되어 1인칭으로 인터뷰에 답한다.`);
+  if (profile.name) lines.push(`이름/호칭: ${profile.name}`);
+  if (profile.age) lines.push(`나이: ${profile.age}`);
+  if (profile.job) lines.push(`직업/역할: ${profile.job}`);
+  if (profile.personality) lines.push(`성격: ${profile.personality}`);
+  if (profile.speech) lines.push(`말투/화법: ${profile.speech}`);
+  if (profile.background) lines.push(`배경/세계관: ${profile.background}`);
+  if (profile.extra) lines.push(`기타 설정: ${profile.extra}`);
+  lines.push('');
+  lines.push(STYLE_PROMPTS[styleKey] || STYLE_PROMPTS.magazine);
+  lines.push('항상 캐릭터의 1인칭 시점과 말투를 유지하고, 설정에서 벗어나는 답은 하지 않는다.');
+  return lines.join('\n');
+}
+
+function getApiConfig() {
+  return {
+    apiKey: OPENROUTER_API_KEY,
+    model: document.getElementById('modelId').value.trim() || 'google/gemini-3.5-flash',
+  };
+}
+
+async function callOpenRouter(systemPrompt, userPrompt, { json = false } = {}) {
+  const { apiKey, model } = getApiConfig();
+  if (!apiKey || apiKey.includes('여기에')) throw new Error('코드 상단의 OPENROUTER_API_KEY에 본인의 API 키를 입력해주세요.');
+
+  const body = {
+    model,
+    messages: [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: userPrompt }
+    ]
+  };
+
+  const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(body)
+  });
+
+  if (!res.ok) {
+    const errText = await res.text();
+    throw new Error(`API 오류 (${res.status}): ${errText.slice(0, 200)}`);
+  }
+
+  const data = await res.json();
+  const content = data.choices?.[0]?.message?.content;
+  if (!content) throw new Error('응답에서 답변을 찾을 수 없습니다.');
+  return content;
+}
+
+// ---- AI question suggestions ----
+async function generateAIQuestions() {
+  const profile = getCharacterProfile();
+  if (!profile.name && !profile.personality) {
+    statusMsg.textContent = '캐릭터의 이름이나 성격을 먼저 입력해주세요.';
+    statusMsg.classList.add('error');
+    return;
+  }
+  const btn = document.getElementById('aiSuggestBtn');
+  btn.disabled = true;
+  btn.textContent = '추천 질문 생성 중...';
+  statusMsg.textContent = '';
+  statusMsg.classList.remove('error');
+
+  try {
+    const sys = '너는 캐릭터 설정을 바탕으로 인터뷰 질문을 추천하는 어시스턴트다. 반드시 JSON 배열만 반환하고, 다른 텍스트나 마크다운 코드블록은 포함하지 않는다.';
+    const userPrompt = `다음 캐릭터 설정을 참고해서, 이 캐릭터에게 던지면 매력적이고 캐릭터의 개성이 드러날 만한 인터뷰 질문 5개를 만들어줘.
+이름: ${profile.name || '미정'}
+나이: ${profile.age || '미정'}
+직업/역할: ${profile.job || '미정'}
+성격: ${profile.personality || '미정'}
+말투: ${profile.speech || '미정'}
+배경: ${profile.background || '미정'}
+기타: ${profile.extra || '미정'}
+
+JSON 배열 형식으로만, 예: ["질문1", "질문2", "질문3", "질문4", "질문5"]`;
+
+    const result = await callOpenRouter(sys, userPrompt, { json: true });
+    const cleaned = result.replace(/```json|```/g, '').trim();
+    const questions = JSON.parse(cleaned);
+
+    suggestionsWrap.innerHTML = '';
+    questions.forEach(q => {
+      const chip = document.createElement('div');
+      chip.className = 'suggestion-chip';
+      chip.textContent = q;
+      chip.addEventListener('click', () => addQuestion(q));
+      suggestionsWrap.appendChild(chip);
+    });
+
+    const regenBtn = document.createElement('button');
+    regenBtn.className = 'btn small outline';
+    regenBtn.textContent = '다시 추천받기';
+    regenBtn.addEventListener('click', generateAIQuestions);
+    suggestionsWrap.appendChild(regenBtn);
+
+  } catch (err) {
+    statusMsg.textContent = err.message;
+    statusMsg.classList.add('error');
+    btn.disabled = false;
+    btn.textContent = '캐릭터 설정 기반 질문 추천받기';
+  }
+}
+
+// ---- Generate interview ----
+generateBtn.addEventListener('click', async () => {
+  const profile = getCharacterProfile();
+  if (questionQueue.length === 0) return;
+
+  generateBtn.disabled = true;
+  generateBtn.textContent = '생성 중...';
+  statusMsg.classList.remove('error');
+
+  const styleKey = document.getElementById('interviewStyle').value;
+  const systemPrompt = buildSystemPrompt(profile, styleKey);
+
+  article.style.display = 'block';
+  articleTitle.textContent = profile.name ? `${profile.name}, 그 속마음을 듣다` : '인터뷰';
+  articleMeta.textContent = `INTERVIEW · ${questionQueue.length} QUESTIONS · STYLE: ${styleKey.toUpperCase()}`;
+  qaContainer.innerHTML = '';
+
+  for (let i = 0; i < questionQueue.length; i++) {
+    const q = questionQueue[i];
+    statusMsg.textContent = `질문 ${i + 1}/${questionQueue.length} 답변 생성 중...`;
+
+    const block = document.createElement('div');
+    block.className = 'qa-block streaming';
+    block.innerHTML = `
+      <div class="qa-q">Q${String(i + 1).padStart(2, '0')}</div>
+      <div class="qa-q-text">${escapeHtml(q.text)}</div>
+      <div class="qa-a">...</div>
+    `;
+    qaContainer.appendChild(block);
+    block.scrollIntoView({ behavior: 'smooth', block: 'end' });
+
+    try {
+      const answer = await callOpenRouter(systemPrompt, q.text);
+      block.querySelector('.qa-a').textContent = answer;
+      block.classList.remove('streaming');
+    } catch (err) {
+      block.querySelector('.qa-a').textContent = `(오류: ${err.message})`;
+      block.querySelector('.qa-a').style.color = 'var(--red)';
+      block.classList.remove('streaming');
+      statusMsg.textContent = err.message;
+      statusMsg.classList.add('error');
+      generateBtn.disabled = false;
+      generateBtn.textContent = '인터뷰 생성하기';
+      return;
+    }
+  }
+
+  statusMsg.textContent = '인터뷰가 완성되었습니다.';
+  generateBtn.disabled = false;
+  generateBtn.textContent = '인터뷰 생성하기';
+});
+
+// ---- Export: card view ----
+document.getElementById('exportCardBtn').addEventListener('click', () => {
+  const profile = getCharacterProfile();
+  const exportCard = document.getElementById('exportCardContent');
+  let html = `
+    <div class="ec-eyebrow">Character Interview</div>
+    <div class="ec-name">${escapeHtml(profile.name || '무명')}</div>
+    <div class="ec-tag">${escapeHtml([profile.age, profile.job].filter(Boolean).join(' · '))}</div>
+  `;
+  qaContainer.querySelectorAll('.qa-block').forEach((block, idx) => {
+    const qText = block.querySelector('.qa-q-text').textContent;
+    const aText = block.querySelector('.qa-a').textContent;
+    html += `
+      <div class="qa-block">
+        <div class="qa-q">Q${String(idx + 1).padStart(2, '0')}</div>
+        <div class="qa-q-text">${escapeHtml(qText)}</div>
+        <div class="qa-a">${escapeHtml(aText)}</div>
+      </div>
+    `;
+  });
+  exportCard.innerHTML = html;
+  document.getElementById('cardModal').classList.add('show');
+});
+
+document.getElementById('closeModal').addEventListener('click', () => {
+  document.getElementById('cardModal').classList.remove('show');
+});
+document.getElementById('cardModal').addEventListener('click', (e) => {
+  if (e.target.id === 'cardModal') {
+    document.getElementById('cardModal').classList.remove('show');
+  }
+});
+
+// ---- Export: copy text ----
+document.getElementById('copyTextBtn').addEventListener('click', () => {
+  const profile = getCharacterProfile();
+  let text = `=== ${profile.name || '무명'} 인터뷰 ===\n\n`;
+  qaContainer.querySelectorAll('.qa-block').forEach((block, idx) => {
+    const qText = block.querySelector('.qa-q-text').textContent;
+    const aText = block.querySelector('.qa-a').textContent;
+    text += `Q${idx + 1}. ${qText}\nA. ${aText}\n\n`;
+  });
+  navigator.clipboard.writeText(text).then(() => {
+    statusMsg.textContent = '텍스트가 클립보드에 복사되었습니다.';
+    statusMsg.classList.remove('error');
+  });
+});
+
+// ---- New interview ----
+document.getElementById('newInterviewBtn').addEventListener('click', () => {
+  questionQueue = [];
+  renderQueue();
+  article.style.display = 'none';
+  qaContainer.innerHTML = '';
+  statusMsg.textContent = '';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+</script>
+
+</body>
+</html>
